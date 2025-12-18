@@ -11,7 +11,7 @@ export default function MacbookScrollDemo() {
                     </span>
                 }
                 badge={
-                    <a href="https://github.com/zeroinfinity03" target="_blank" rel="noopener noreferrer">
+                    <a href="https://github.com/zeroinfinity03/algospeak-1.0" target="_blank" rel="noopener noreferrer">
                         <GitHubBadge className="h-10 w-10 -rotate-12 transform" />
                     </a>
                 }

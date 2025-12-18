@@ -527,7 +527,7 @@ Since the model is stored with Git LFS:
 
 ```bash
 # Clone the repo
-git clone <repo-url>
+git clone https://github.com/zeroinfinity03/algospeak-1.0.git
 cd algospeak
 
 # Pull the large model files
