@@ -13,6 +13,87 @@ This project implements a **cutting-edge, two-stage AI content moderation system
 
 ---
 
+## 🔍 **What is Algospeak? (Real Examples)**
+
+**Algospeak** is coded language that users create to evade content moderation algorithms. Here are real examples of how harmful content gets disguised:
+
+### **Harmful Algospeak Examples**
+
+| Hidden Word | Algospeak Version | Why It's Dangerous |
+|-------------|-------------------|-------------------|
+| `kill` | `un@l!ve`, `unalive` | Self-harm content bypasses filters |
+| `bomb` | `b@mb`, `b0mb` | Violent threats go undetected |
+| `gun` | `g@n`, `gl0ck` | Armed threats slip through |
+| `suicide` | `turn 13`, `sewerslide` | Numeric codes and homophones |
+| `meth` | `glazed donuts` | Drug code words |
+| `porn` | `corn`, `cornstar` | Deliberate misspellings |
+
+### **Example: How Harmful Content Evades Detection**
+
+**Original Post:**
+> *"I've been drifting for months, and lately the dark thoughts have settled in like a heavy fog. Yesterday I actually rehearsed how I might un@l!ve myself..."*
+
+❌ **Traditional Filter:** Misses this completely (no keyword match)  
+✅ **Our System:** Detects `un@l!ve` → normalizes to `kill` → classifies as `extremely_harmful`
+
+### **The Context Challenge: Same Word, Different Meaning**
+
+Our system is smart enough to understand **context**:
+
+| Text | Contains | Classification | Why |
+|------|----------|---------------|-----|
+| *"I want to unalive myself"* | `unalive` | 🔴 **Harmful** | Self-harm intent |
+| *"I killed it at work today!"* | `killed` | 🟢 **Safe** | Figure of speech |
+| *"Let's shoot for the moon"* | `shoot` | 🟢 **Safe** | Motivational idiom |
+| *"The fresh-cut grass smells amazing"* | `grass` | 🟢 **Safe** | Lawncare context |
+| *"This song is an absolute bop!"* | `bop` | 🟢 **Safe** | Music slang |
+
+---
+
+## 🧠 **How It Works: Two-Stage Pipeline**
+
+```
+User Input: "I want to unalive myself"
+                    │
+                    ▼
+    ┌───────────────────────────────┐
+    │  STAGE 1: Pattern Normalizer  │
+    │  (JSON-based, sub-millisecond)│
+    │                               │
+    │  "unalive" → "kill"           │
+    │  "seggs" → "sex"              │
+    │  "corn" → "porn"              │
+    └───────────────────────────────┘
+                    │
+                    ▼
+        "I want to kill myself"
+                    │
+                    ▼
+    ┌───────────────────────────────┐
+    │  STAGE 2: AI Classifier       │
+    │  (Fine-tuned Qwen2.5-3B)      │
+    │                               │
+    │  Understands CONTEXT:         │
+    │  - Is this a threat?          │
+    │  - Is this a figure of speech?│
+    │  - What's the intent?         │
+    └───────────────────────────────┘
+                    │
+                    ▼
+    Result: "extremely_harmful, self_harm, severity: 3"
+```
+
+### **Why Two Stages?**
+
+| Single-Stage LLM | Our Two-Stage System |
+|------------------|---------------------|
+| ❌ New slang requires retraining ($5,000+) | ✅ Add to JSON file (free, 5 minutes) |
+| ❌ 2-4 weeks to update | ✅ Instant updates |
+| ❌ LLM learns patterns + context (inefficient) | ✅ Stage 1: patterns, Stage 2: context |
+| ❌ Expensive to maintain | ✅ JSON updates, no retraining |
+
+---
+
 ## 📋 **Prerequisites**
 
 - **Python 3.11+** (for backend)
@@ -368,6 +449,75 @@ ollama create qwen-algospeak -f Modelfile  # Recreate model
 - **Traditional Approach**: $4.8M annually
 - **Our System**: $600K annually  
 - **Projected Savings**: $4.2M annually (**87% cost reduction**)
+
+---
+
+## 🔧 **Model Training (QLoRA Fine-tuning)**
+
+The AI classifier was fine-tuned using **QLoRA (Quantized Low-Rank Adaptation)** on Google Colab with the following setup:
+
+### **Training Configuration**
+| Parameter | Value |
+|-----------|-------|
+| Base Model | Qwen2.5-3B-Instruct |
+| Training Samples | 52,913 instruction-tuned examples |
+| Quantization | 4-bit NF4 |
+| LoRA Rank | 16 |
+| Learning Rate | 2e-4 |
+| Epochs | 3 |
+
+### **Training Metrics (Weights & Biases)**
+
+The following screenshots show the training run monitored via Weights & Biases:
+
+#### Colab Training Run
+![Colab Training Run](backend/images/colab_training_run.png)
+
+#### GPU Memory Utilization
+![GPU Memory Utilization](backend/images/wandb_gpu_mem_util.png)
+
+#### GPU Power & Clock Speed
+![GPU Power & Clocks](backend/images/wandb_gpu_power_clocks.png)
+
+#### System CPU & Memory Usage
+![System CPU & Memory](backend/images/wandb_system_cpu_mem.png)
+
+#### System I/O Metrics
+![System I/O](backend/images/wandb_system_io.png)
+
+---
+
+## 🧪 **Validation Test Cases**
+
+Use these test cases to validate the system handles both **true positives** and avoids **false positives**:
+
+### **Should be Detected as HARMFUL**
+
+| # | Test Text | Hidden Term | Expected |
+|---|-----------|-------------|----------|
+| 1 | *"Yesterday I actually rehearsed how I might un@l!ve myself"* | `un@l!ve` = kill | 🔴 Harmful |
+| 2 | *"If our team loses, I'm dropping a b@mb in the stadium"* | `b@mb` = bomb | 🔴 Harmful |
+| 3 | *"Don't make me pull the g@n on you like last time"* | `g@n` = gun | 🔴 Harmful |
+| 4 | *"He kept repeating he would turn 13 tonight"* | `turn 13` = suicide code | 🔴 Harmful |
+| 5 | *"Bring extra glazed donuts tonight, the good stuff"* | `glazed donuts` = meth | 🔴 Harmful |
+
+### **Should be Detected as SAFE (Context-Aware)**
+
+| # | Test Text | Trigger Word | Expected | Reason |
+|---|-----------|--------------|----------|--------|
+| 1 | *"We need to sh00t the mountain sunrise in one take"* | `sh00t` | 🟢 Safe | Filmmaking context |
+| 2 | *"The new comedian absolutely k1lled on stage"* | `k1lled` | 🟢 Safe | Figure of speech |
+| 3 | *"Alright team, tomorrow we shoot for the moon!"* | `shoot` | 🟢 Safe | Motivational idiom |
+| 4 | *"The aroma of fresh-cut grass drifted through the window"* | `grass` | 🟢 Safe | Lawncare context |
+| 5 | *"This track is a total bop!"* | `bop` | 🟢 Safe | Music slang |
+
+### **How to Test**
+```bash
+# Send test cases to the API
+curl -X POST "http://localhost:8000/moderate" \
+  -H "Content-Type: application/json" \
+  -d '{"text": "I want to unalive myself"}'
+```
 
 ---
 
