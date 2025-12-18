@@ -454,9 +454,108 @@ ollama create qwen-algospeak -f Modelfile  # Recreate model
 
 ## 🔧 **Model Training (QLoRA Fine-tuning)**
 
-The AI classifier was fine-tuned using **QLoRA (Quantized Low-Rank Adaptation)** on Google Colab with the following setup:
+The AI classifier was fine-tuned using **QLoRA (Quantized Low-Rank Adaptation)** on Google Colab.
+
+---
+
+### **📊 Training Data Pipeline**
+
+#### **Step 1: Source Dataset**
+
+| Dataset | Jigsaw Unintended Bias in Toxicity Classification |
+|---------|--------------------------------------------------|
+| **Source** | Kaggle Competition Dataset |
+| **Total Comments** | 1.8 million human-annotated comments |
+| **Toxicity Scores** | 0.0 to 1.0 (continuous, human-labeled) |
+| **Content Types** | Social media comments, forum posts, online discussions |
+
+#### **Step 2: Label Mapping**
+
+We converted continuous toxicity scores into discrete categories:
+
+```python
+# Our intelligent categorization system
+if toxicity >= 0.8:
+    label = "extremely_harmful"    # 1.7% of data (~30K samples)
+elif toxicity >= 0.5:
+    label = "harmful"              # 6.3% of data (~113K samples)
+elif toxicity >= 0.2:
+    label = "potentially_harmful"  # 12.9% of data (~232K samples)
+else:
+    label = "safe"                 # 79.1% of data (~1.4M samples)
+```
+
+**Key Insight:** This 80/20 safe/harmful distribution **mirrors real-world content**, enabling the model to learn realistic decision boundaries.
+
+#### **Step 3: Sample Selection**
+
+From 1.8M comments, we selected **50,000 high-quality examples**:
+- Balanced across all 4 categories
+- Diverse content types
+- Clear examples (not edge cases)
+
+#### **Step 4: Algospeak Augmentation (CRITICAL)**
+
+We created **algospeak variants** by applying Stage 1 patterns **in reverse**:
+
+```
+Original harmful text:     "I want to kill myself"
+                              ↓ Reverse normalization
+Algospeak variant:         "I want to unalive myself"
+```
+
+| Process | Count |
+|---------|-------|
+| Base Jigsaw samples | 50,000 |
+| Algospeak augmented variants | +2,913 |
+| **Final Training Dataset** | **52,913** |
+
+#### **Step 5: Instruction Format**
+
+Converted to chat format for instruction-tuning:
+
+```json
+{
+  "instruction": "Classify this text as harmful or safe. Give a short answer.",
+  "input": "I want to kill myself",
+  "output": "extremely_harmful, self_harm, severity: 3"
+}
+```
+
+---
+
+### **🧠 CRITICAL INSIGHT: Trained on NORMALIZED Text**
+
+**The model was trained primarily on text AFTER Stage 1 normalization:**
+
+```
+Training examples the model SAW:
+✅ "I want to kill myself" → extremely_harmful
+✅ "I want to sex you" → harmful
+✅ "Drop a bomb here" → extremely_harmful
+
+Training examples the model DID NOT see:
+❌ "I want to unalive myself" 
+❌ "I want to seggs you"
+❌ "Drop a b@mb here"
+```
+
+**Why this matters:**
+
+| If Stage 1 normalizes correctly | If Stage 1 misses new slang |
+|--------------------------------|----------------------------|
+| `"unalive"` → `"kill"` | `"minecraft"` → (unchanged) |
+| Stage 2 sees `"kill"` → **harmful** ✅ | Stage 2 sees `"minecraft"` → **safe** ❌ |
+
+**This is the intentional trade-off:**
+- ✅ Stage 2 stays lightweight (doesn't learn patterns)
+- ✅ No retraining needed for new slang (just update JSON)
+- ❌ New slang temporarily bypasses until JSON is updated
+
+---
 
 ### **Training Configuration**
+
 | Parameter | Value |
 |-----------|-------|
 | Base Model | Qwen2.5-3B-Instruct |
