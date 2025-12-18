@@ -1,0 +1,1 @@
+FROM ./quantized_model/unsloth.Q4_K_M.gguf

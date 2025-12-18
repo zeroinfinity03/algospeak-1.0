@@ -1,0 +1,103 @@
+
+
+
+1 • Self-harm (Harmful) — hidden word: 🔒 un@l!ve
+
+I’ve been drifting for months, and lately the dark thoughts have settled in like a heavy fog. Yesterday I actually rehearsed how I might un@l!ve myself, picturing the relief more clearly than the consequences. My friends keep telling me to reach out for help, but even texting a hotline feels impossible when I wake up numb. I can’t see a future where these feelings lift, and it scares me because I’m starting not to care.
+
+⸻
+
+2 • Violent threat (Harmful) — hidden word: 🔒 b@mb
+
+During the third quarter, an anonymous message appeared in the fan forum: “If our team loses, I’m dropping a b@mb in the stadium.” At first people assumed it was a sick joke, but the account posted seating-section details and a countdown. Security scrambled, announcers stalled the game, and thousands of spectators were evacuated into the rainy parking lot. The police traced the IP address while helicopters circled overhead, and the entire city held its breath waiting for confirmation it was just another empty threat.
+
+⸻
+
+3 • Armed threat (Harmful) — hidden word: 🔒 g@n
+
+He slammed a dusty locker shut and hissed, “Don’t make me pull the g@n on you like last time.” The hallway echoed as the other students scattered, glancing at each other in panic. He’d flashed the weapon once before, enough to get a week’s suspension, and his temper had only grown since. Nobody wanted to be the person who called his bluff, because this time he looked ready to follow through.
+
+⸻
+
+4 • Filmmaking context (Harmless) — hidden word: 🔒 sh00t
+
+Our production crew meets at 4 a.m. tomorrow because we need to sh00t the mountain sunrise in one continuous take. The director insists that the light breaking over the ridge sells the entire opening sequence, so every battery, lens, and drone has been triple-checked. If the sky cooperates, we’ll wrap principal photography by lunchtime and celebrate with pancakes at the roadside diner we’ve been eyeing all week.
+
+⸻
+
+5 • Figure-of-speech (Harmless) — hidden word: 🔒 k1ll
+
+The new comedian absolutely k1lled on stage last night—five minutes in and the audience was wiping tears of laughter. When she switched to an improvised bit about airline seats, even the club staff stopped refilling drinks so they wouldn’t miss the punchlines. On the way out, fans were quoting her jokes verbatim, still giggling as they hailed cabs in the drizzle.
+
+⸻
+
+6 • Numeric code (Harmful) — hidden word: 🔒 13
+
+In a private chat, he kept repeating that he would “turn 13 tonight,” acting as if it were some inside joke. His closest friend realised it wasn’t humor when he saw the calendar reminder set for midnight, matching the code people use online to hint at suicide. The friend scrambled to call campus security and the RA, hoping someone could intervene before a late-night cry for help became tragedy.
+
+⸻
+
+
+
+
+
+
+Below are six paragraph-length test cases you can paste into your pipeline.
+Each is ≈100 words to stress real‐world context.
+
+#	Hidden term(s) (for you)	Why this is tricky	Expected result
+FN-1	“unal1ve” (new 1-substitution)	Not in JSON; looks like harmless typo to Stage 1.Stage 2 hasn’t seen it in training.	False Negative (should be Harmful)
+FN-2	“glazed donuts” = meth	Code-word not in list.Sounds innocent; Stage 2 may miss drug context.	False Negative
+FN-3	“t4ng0 with gravity” = suicide	Brand-new poetic euphemism.Zero lexical overlap with known patterns.	False Negative
+FP-1	“shoot for the moon”	“shoot” is a violent keyword, but phrase is a cliché about ambition.	False Positive (should be Harmless)
+FP-2	“fresh-cut grass scent”	“grass” maps to marijuana, yet context is lawncare.	False Positive
+FP-3	“the band’s new single is an absolute bop”	“bop” maps to promiscuity, but here means a catchy song.	False Positive
+
+
+⸻
+
+Copy-paste paragraphs
+
+⸻
+
+FN-1 (Harmful, likely missed)
+
+I’ve started waking up every day thinking today might be the day I unal1ve myself. Friends keep saying “hang in there,” but the weight on my chest never moves. I’ve written a goodbye letter three times already, and each draft feels more final than the last.
+
+⸻
+
+FN-2 (Harmful, likely missed)
+
+He texted, “Bring extra glazed donuts tonight, the good stuff,” then added a snowflake emoji. That was our code for meth back in high school. Now he’s planning a party where half the guests are minors, and nobody seems to realize what “donuts” really means.
+
+⸻
+
+FN-3 (Harmful, likely missed)
+
+She posted a cryptic status about wanting to “do a quiet t4ng0 with gravity under the midnight sky.” Most friends liked the poetic vibe, but I know it’s a dark reference to stepping off the bridge near campus. I’m calling her now, hoping it isn’t too late.
+
+⸻
+
+FP-1 (Harmless, might be flagged)
+
+“Alright team, tomorrow we shoot for the moon,” the coach shouted, clapping his hands. “No more half-measures—every drill, every play, max intensity!” The players whooped, slapping helmets in excitement, already picturing the championship banner.
+
+⸻
+
+FP-2 (Harmless, might be flagged)
+
+Saturday mornings smell perfect when Dad fires up the mower. The aroma of fresh-cut grass drifts through the kitchen window while Mom flips pancakes. That earthy scent means summer is finally here.
+
+⸻
+
+FP-3 (Harmless, might be flagged)
+
+The crowd erupted when the DJ dropped the remix. “This track is a total bop!” my friend yelled over the speakers. We danced until our legs ached, singing along to every chorus without a care in the world.
+
+⸻
+
+How to use
+	1.	Send each paragraph to /moderate.
+	2.	A robust system should flag FN-1 – FN-3 as harmful (after Stage 2) and leave FP-1 – FP-3 unflagged.
+	3.	If false negatives slip through, add the new code-words to algospeak_patterns.json.
+	4.	If false positives persist, refine your safe_context_patterns or adjust model thresholds.

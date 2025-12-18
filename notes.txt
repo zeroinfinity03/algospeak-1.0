@@ -1,0 +1,56 @@
+# Complete Git Push Commands with LFS for Large Model Files
+# =========================================================
+
+# STEP 1: Initialize Git (if not already done)
+git init
+
+# STEP 2: Set up Git LFS (MUST do before adding files)
+git lfs install
+git lfs track "*.gguf"
+git lfs track "*.safetensors"
+git lfs track "*.bin"
+
+# STEP 3: Add .gitattributes FIRST (this tells git to use LFS)
+git add .gitattributes
+
+# STEP 4: Add all other files
+git add .
+
+# STEP 5: Commit
+git commit -m "first commit"
+
+# STEP 6: Rename branch to main
+git branch -M main
+
+# STEP 7: Create a new repo on GitHub, copy the URL, then:
+git remote add origin <paste-your-repo-url-here>
+
+# STEP 8: Push (LFS files upload automatically)
+git push -u origin main
+
+# =========================================================
+# EXAMPLE WITH ACTUAL URL:
+# =========================================================
+# git init
+# git lfs install
+# git lfs track "*.gguf"
+# git add .gitattributes
+# git add .
+# git commit -m "first commit"
+# git branch -M main
+# git remote add origin https://github.com/username/algospeak.git
+# git push -u origin main
+
+# =========================================================
+# ON A NEW MACHINE (after cloning):
+# =========================================================
+# git clone https://github.com/username/algospeak.git
+# cd algospeak
+# git lfs pull          # Downloads the large model files (1.8GB)
+
+# =========================================================
+# USEFUL COMMANDS:
+# =========================================================
+# git lfs ls-files          # List LFS tracked files
+# git lfs status            # Check LFS status
+# git remote -v             # Verify remote URL
